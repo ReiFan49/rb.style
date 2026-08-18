@@ -1,0 +1,120 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUBY_VERSION: '3.4'
+
+jobs:
+  changes:
+    name: Changes
+    runs-on: ubuntu-latest
+    outputs:
+      gem-version: ${{ steps.filter.outputs.gem-version }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Check Changes
+      uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          gem-version:
+          - 'lib/**/version.rb'
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Self-Consistency Lint
+      run: bundle exec rubocop -f g
+  build:
+    needs:
+    - lint
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: ${{ env.RUBY_VERSION }}
+    - name: Build
+      id: builder
+      run: |
+        GEM_NAME=$(ls | grep -F .gemspec | cut -d. -f1)
+        gem build ${GEM_NAME} || exit 1
+
+        GEM_FILE=$(ls | grep -vF .gemspec | grep -F "${GEM_NAME}" | grep -F .gem)
+        GEM_VER=${GEM_FILE#${GEM_NAME}-}
+        GEM_VER=${GEM_VER%.*}
+        echo "version=${GEM_VER}" >> "${GITHUB_OUTPUT}"
+    - uses: actions/upload-artifact@v7
+      with:
+        name: v${{ steps.builder.outputs.version }}
+        path: |
+          *.gem
+        if-no-files-found: error
+        # archive: false
+  release:
+    needs:
+    - build
+    - changes
+    name: Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    if: |
+      needs.changes.outputs.gem-version == 'true' &&
+      github.ref_type == 'branch' && github.ref_name == 'master'
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Setup Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        bundler-cache: true
+        ruby-version: ${{ env.RUBY_VERSION }}
+    - uses: actions/download-artifact@v7
+      with:
+        merge-multiple: true
+        # skip-decompress: true
+    - name: Fix potnetial bundler error
+      run: |
+        cat << EOF >> Rakefile
+        # This is from tagged release. No need for extra commit and pushing.
+        Rake::Task['release'].tap do |task|
+          task.prerequisites.reject! do |name| %w(release:guard_clean release:source_control_push).include?(name) end
+        end
+        EOF
+    - name: Prepare Gem Folder
+      run: |
+        mkdir -p ~/.gem
+        touch ~/.gem/credentials
+        chmod 0600 ~/.gem/credentials
+
+        echo '---' > ~/.gem/credentials
+        echo ':github: ${{ secrets.GITHUB_TOKEN }}' >> ~/.gem/credentials
+    - name: Publish to GitHub
+      run: |
+        gem push --KEY github --host https://rubygems.pkg.github.com/${OWNER} *.gem
+      env:
+        OWNER: ${{ github.repository_owner }}
+    - name: Publish to RubyGems (Trusted)
+      uses: rubygems/release-gem@v1
+      with:
+        await-release: 'false'

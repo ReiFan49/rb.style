@@ -1,0 +1,12 @@
+inherit_from: ./general.yml
+
+AllCops:
+  Exclude:
+  - 'bin/**/*'
+  - 'config/**/*.json'
+  - 'db/**/*'
+  - 'test/dummy/**/*'
+  - 'vendor/**/*'
+Layout/LineLength:
+  Exclude:
+  - 'config/**/*'
