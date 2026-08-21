@@ -432,8 +432,10 @@ Lint/UnreachableCode:
 Lint/UnreachableLoop:
   Enabled: false
 Lint/UnusedBlockArgument:
+  Severity: info
   Enabled: true
 Lint/UnusedMethodArgument:
+  Severity: info
   Enabled: true
   AllowUnusedKeywordArguments: true
 Lint/UriEscapeUnescape:
