@@ -132,7 +132,7 @@ Layout/LineLength:
   Severity: convention
   Max: 144
 Layout/MultilineArrayLineBreaks:
-  Enabled: true
+  Enabled: false
 Layout/MultilineAssignmentLayout:
   Enabled: true
   EnforcedStyle: same_line
@@ -698,7 +698,7 @@ Style/TernaryParentheses:
   Enabled: true
 Style/TrailingCommaInArguments:
   Severity: warning
-  EnforcedStyleForMultiline: comma
+  EnforcedStyleForMultiline: consistent_comma
   Enabled: true
 Style/TrailingCommaInArrayLiteral:
   Severity: warning
