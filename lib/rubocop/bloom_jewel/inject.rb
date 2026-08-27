@@ -8,8 +8,7 @@ module RuboCop
         combine_settings('general')
       end
 
-      private
-      def combine_settings(name)
+      def load_configuration_for(name)
         # Prepare files to load
         base_file = CONFIG_DIR / "#{name}.yml"
         patch_files = CONFIG_DIR.glob("#{name}_*.yml")
@@ -25,14 +24,15 @@ module RuboCop
           .map(&:last)
           .tap(&patch_files.method(:replace))
 
+        to_rename_cops = {}
+        to_remove_cops = []
+
         # Combine all configuration from base to all patches in specified order.
         combined = [base_file, *patch_files].select(&:exist?)
           .inject({}) do |obj, path| ConfigLoader.merge(obj, ConfigLoader.load_yaml_configuration(path.to_path)) end
           .compact
         config = Config.new(combined, base_file.to_path)
         obsoletion = ConfigObsoletion.new(config)
-        to_rename_cops = {}
-        to_remove_cops = []
 
         # Check current obsoletion rules and adjust the combined configuration cops accordingly.
         obsoletion.rules.each do |rule|
@@ -61,7 +61,16 @@ module RuboCop
         end
 
         config.make_excludes_absolute
+        combined
+      end
+
+      private
+      def combine_settings(name)
+        base_file = CONFIG_DIR / "#{name}.yml"
+        combined = load_configuration_for(name)
+        config = Config.new(combined, base_file.to_path)
         config = ConfigLoader.merge_with_default(config, base_file.to_path, unset_nil: false)
+
         ConfigLoader.instance_variable_set(:@default_configuration, config)
       end
     end
