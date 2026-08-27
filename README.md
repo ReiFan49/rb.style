@@ -11,7 +11,6 @@ gem "rubocop-bloom_jewel", require: false
 
 Prepend on top of project's RuboCop config:
 ```ruby
-inherit_gem:
-  rubocop-bloom_jewel:
-  - config/general.yml
+require:
+- rubocop-bloom_jewel
 ```

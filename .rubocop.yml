@@ -1,2 +1,5 @@
-inherit_from:
-- config/general.yml
+require:
+- rubocop-bloom_jewel
+
+AllCops:
+  SuggestExtensions: false
