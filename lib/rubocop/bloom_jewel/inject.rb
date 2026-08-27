@@ -10,10 +10,13 @@ module RuboCop
 
       private
       def combine_settings(name)
+        # Prepare files to load
         base_file = CONFIG_DIR / "#{name}.yml"
         patch_files = CONFIG_DIR.glob("#{name}_*.yml")
         rubocop_version = Gem::Version.new(RuboCop::Version::STRING)
 
+        # Sort patches based on specified version.
+        # Format is <prefix>_<version>.yml
         patch_files.map do |path| [path.basename('.yml').to_path.delete_prefix("#{name}_"), path] end
           .select do |(target_ver, _path)| target_ver.match?(/^\d+([.]\d+)+$/) end
           .map do |(target_ver, path)| [Gem::Version.new(target_ver), path] end
@@ -22,6 +25,7 @@ module RuboCop
           .map(&:last)
           .tap(&patch_files.method(:replace))
 
+        # Combine all configuration from base to all patches in specified order.
         combined = [base_file, *patch_files].select(&:exist?)
           .inject({}) do |obj, path| ConfigLoader.merge(obj, ConfigLoader.load_yaml_configuration(path.to_path)) end
           .compact
@@ -30,6 +34,7 @@ module RuboCop
         to_rename_cops = {}
         to_remove_cops = []
 
+        # Check current obsoletion rules and adjust the combined configuration cops accordingly.
         obsoletion.rules.each do |rule|
           next unless ConfigObsoletion::CopRule === rule
           next unless combined.key?(rule.old_name)
