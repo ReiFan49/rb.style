@@ -1,3 +1,5 @@
+# This file may be removed if the fits of Rails cops are preferred instead.
+
 inherit_from: ./general.yml
 
 AllCops:
