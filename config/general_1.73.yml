@@ -1,0 +1,4 @@
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: diff_comma
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: diff_comma
