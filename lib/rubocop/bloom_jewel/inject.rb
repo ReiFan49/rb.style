@@ -26,11 +26,38 @@ module RuboCop
 
         to_rename_cops = {}
         to_remove_cops = []
+        to_inherit_files = []
 
         # Combine all configuration from base to all patches in specified order.
         combined = [base_file, *patch_files].select(&:exist?)
-          .inject({}) do |obj, path| ConfigLoader.merge(obj, ConfigLoader.load_yaml_configuration(path.to_path)) end
-          .compact
+          .inject({}) do |obj, path|
+            partial = ConfigLoader.load_yaml_configuration(path.to_path)
+            to_inherit_files.concat(Array(partial.delete('inherit_from'))) if partial.key?('inherit_from')
+            ConfigLoader.merge(obj, partial)
+          end.compact
+
+        # Find all non-relative, non-local file pointing inherit_from.
+        # This tweaks a bit from the intended `inherit_from` because
+        # this `inherit_from` is specficially for injection rather than
+        # configuration itself.
+        invalid_inherit_files = to_inherit_files.reject do |fn|
+          uri, path = URI(fn), CONFIG_DIR / fn
+
+          uri.scheme.nil? && uri.host.nil? && !uri.path.nil? &&
+          uri.query.nil? && uri.fragment.nil? && uri.opaque.nil? &&
+          path.relative? && path.exist? && path.extname.to_s == '.yml'
+        end
+
+        fail ConfigNotFoundError, <<~EOS unless invalid_inherit_files.empty?
+          Configuration file cannot be loaded: #{invalid_inherit_files.join(', ')}.
+          Provided file can only be a relative path from the gem and must exists.
+        EOS
+
+        to_inherit_files.map do |fn| File.basename(fn, File.extname(fn)) end
+          .map(&method(:load_configuration_for))
+          .inject(combined, &ConfigLoader.method(:merge))
+          .tap(&combined.method(:replace))
+
         config = Config.new(combined, base_file.to_path)
         obsoletion = ConfigObsoletion.new(config)
 
