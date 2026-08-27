@@ -1,2 +1,3 @@
-require 'rubocop'
-require 'rubocop/bloom_jewel/version'
+require 'rubocop/bloom_jewel/inject'
+
+RuboCop::BloomJewel::Inject.load_defaults!
