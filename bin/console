@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require 'bundler/setup'
+require 'rubocop/bloom_jewel'
+require 'rubocop/bloom_jewel/inject'
+
+consoles = {}
+console_check = ->(console_key, &block) {
+  consoles[console_key] = proc do |console|
+    next console if console != console_key
+
+    block.call
+    nil
+  end
+}
+
+console_check.call :pry do
+  require 'pry'
+  Pry.start
+end
+
+console_check.call :default do
+  require 'irb'
+  IRB.start(__FILE__)
+end
+
+catch :console do
+  gem_names = Bundler.locked_gems.specs.map(&:name)
+
+  if gem_names.include? 'pry' then # rubocop:disable Style/IfUnlessModifier
+    throw :console, :pry
+  end
+
+  throw :console, :default
+end&.yield_self(&consoles[:pry])
+  &.yield_self(&consoles[:default])
