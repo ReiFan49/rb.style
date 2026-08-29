@@ -16,11 +16,10 @@ module RuboCop
       # @param name [String] configuration name to lookup
       # @return [void]
       def combine_settings(name)
-        base_file = CONFIG_DIR / "#{name}.yml"
         combiner = ConfigCombiner.new(name)
         combiner.process!
-        config = Config.new(combiner.result, base_file.to_path)
-        config = ConfigLoader.merge_with_default(config, base_file.to_path, unset_nil: false)
+        config = Config.new(combiner.result, combiner.base_file.to_path)
+        config = ConfigLoader.merge_with_default(config, combiner.base_file.to_path, unset_nil: false)
 
         ConfigLoader.instance_variable_set(:@default_configuration, config)
         self

@@ -13,7 +13,7 @@ module RuboCop
     class ConfigCombiner
       RUBOCOP_VERSION = Gem::Version.new(RuboCop::Version::STRING)
 
-      attr_reader :result
+      attr_reader :base_file, :result
 
       # @param name [String] configuration name to lookup
       # @note as this configuration patcher applies for this specific
