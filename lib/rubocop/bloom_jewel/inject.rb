@@ -73,6 +73,13 @@ module RuboCop
 
         config = Config.new(combined, base_file.to_path)
         obsoletion = ConfigObsoletion.new(config)
+        valid_top_keys = [
+          'AllCops',
+          'inherit_mode',
+          *Cop::Registry.global.departments,
+          *Cop::Registry.global.names,
+        ]
+        valid_top_keys.map!(&:to_s)
 
         # Check current obsoletion rules and adjust the combined configuration cops accordingly.
         obsoletion.rules.each do |rule|
@@ -86,10 +93,16 @@ module RuboCop
             to_remove_cops << rule.old_name
           end # rubocop:enable Style/MissingElse
         end
+        # 1. Rename all "renamed" cop configurations
         combined.transform_keys! do |k|
           to_rename_cops.fetch(k, k)
         end
+        # 2. Remove all "removed/split" cop configurations
+        # For split's case, the addition must be referred with extra file version.
         combined.reject! do |k| to_remove_cops.include?(k) end
+        # 3. Ensure all cop configurations are top-level valid.
+        combined.select! do |k| valid_top_keys.include?(k) end
+        # 4. Remove extra cop parameters to follow "currently installed" definitions.
         combined.each do |cop, cop_config|
           default_config = ConfigLoader.default_configuration[cop]
           next if default_config.nil?
