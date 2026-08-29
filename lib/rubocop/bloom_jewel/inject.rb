@@ -2,8 +2,11 @@ require 'rubocop/bloom_jewel'
 
 module RuboCop
   module BloomJewel
+    # @api private
     module Inject; end
     class << Inject
+      # Loads gem-specified cop configuration
+      # @return [void]
       def load_defaults!
         combine_settings('general')
       end
@@ -15,6 +18,9 @@ module RuboCop
       # Once that done, does plugin worth the try rather than just loading it?
       # The point of plugin is to extend (or override) the defaults
       # from what I skimmed at the point of writing.
+      #
+      # @param name [String] configuration name to lookup
+      # @return [{String => String, Array, Hash}]
       def load_configuration_for(name)
         # Prepare files to load
         base_file = CONFIG_DIR / "#{name}.yml"
@@ -99,6 +105,9 @@ module RuboCop
       end
 
       private
+      # Injects provided configuration after combined and adjusted to the defaults.
+      # @param name [String] configuration name to lookup
+      # @return [void]
       def combine_settings(name)
         base_file = CONFIG_DIR / "#{name}.yml"
         combined = load_configuration_for(name)
