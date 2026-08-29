@@ -8,6 +8,13 @@ module RuboCop
         combine_settings('general')
       end
 
+      # TODO: Despite this hacky work for combining and automatically adjust
+      # the configuration. This was supposed to work like how inherit_from or
+      # inherit_gem was parsed from the specified configuration file
+      # rather than injecting the defaults instead.
+      # Once that done, does plugin worth the try rather than just loading it?
+      # The point of plugin is to extend (or override) the defaults
+      # from what I skimmed at the point of writing.
       def load_configuration_for(name)
         # Prepare files to load
         base_file = CONFIG_DIR / "#{name}.yml"
