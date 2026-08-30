@@ -1,16 +1,16 @@
 require_relative 'lib/rubocop/bloom_jewel/version'
 
 Gem::Specification.new do |s|
-  s.name        = "rubocop-bloom_jewel"
+  s.name        = 'rubocop-bloom_jewel'
   s.version     = RuboCop::BloomJewel::VERSION
   s.authors     = [
     %(Rei Hakurei),
   ]
   s.email       = %w(contact@bloom-juery.net)
 
-  s.summary     = "Personalized RuboCop style preference"
-  s.homepage    = "https://bloom-juery.net"
-  s.license     = "BSD-3-Clause-Clear"
+  s.summary     = 'Personalized RuboCop style preference'
+  s.homepage    = 'https://bloom-juery.net'
+  s.license     = 'BSD-3-Clause-Clear'
 
   s.metadata['homepage_uri']    = s.homepage
   s.metadata['source_code_uri'] = s.homepage
