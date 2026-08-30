@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.summary     = 'Personalized RuboCop style preference'
   s.homepage    = 'https://bloom-juery.net'
   s.license     = 'BSD-3-Clause-Clear'
+  s.required_ruby_version = Gem::Requirement.new('>= 2.5')
 
   s.metadata['homepage_uri']    = s.homepage
   s.metadata['source_code_uri'] = s.homepage
@@ -38,5 +39,5 @@ Gem::Specification.new do |s|
 
   s.add_development_dependency 'rake'
 
-  s.add_dependency 'rubocop', '~> 1.17'
+  s.add_dependency 'rubocop', '~> 1.0'
 end
